@@ -1,0 +1,56 @@
+# Threads投稿のデフォルト文体設定
+# このファイルをコピーして style_user.yaml を作成し、カスタマイズしてください
+
+# 基本設定
+tone: "カジュアル"  # カジュアル / フォーマル / ビジネス
+max_length: 500     # 最大文字数（Threads上限: 500）
+
+# 投稿の構造
+structure:
+  opening: "自由"   # 書き出しのパターン（例: "〇〇って、〜だなと感じる。"）
+  body: "理由や補足を1〜2文"
+  closing: "自由"   # 締めのパターン（例: "〜だと最近改めて思う。"）
+
+# 禁止事項
+prohibited:
+  - "絵文字"
+  # 必要に応じて追加: "大げさな表現", "宣伝", "問いかけ開始" など
+
+# ハッシュタグ（Threadsは1投稿1個まで）
+hashtag:
+  enabled: false
+  # candidates:
+  #   - "#自分磨き"
+  #   - "#ビジネス"
+
+# フォーマット型カタログ（ランダムに割り当て）
+format_catalog:
+  - id: "observation"
+    label: "観察型"
+    instruction: "具体的な観察から始めて気づきにつなげる"
+  - id: "question"
+    label: "問いかけ型"
+    instruction: "素朴な疑問から始めて、自分なりの答えを述べる"
+  - id: "contrast"
+    label: "対比型"
+    instruction: "2つの概念を対比して気づきを導く"
+  - id: "confession"
+    label: "告白型"
+    instruction: "本音を吐露する形で始め、等身大の気づきにつなげる"
+  - id: "reversal"
+    label: "逆張り型"
+    instruction: "常識をひっくり返す切り口で注目を集める"
+  - id: "timeline"
+    label: "変化型"
+    instruction: "自分の変化・成長を軸に書く"
+  - id: "action"
+    label: "行動提案型"
+    instruction: "実際の行動とその結果を述べ、読者にも行動を促す"
+  - id: "lesson"
+    label: "学び型"
+    instruction: "日常から得た学びをシンプルに言語化する"
+
+# お手本（任意: ユーザーが自分のスタイルに合わせて設定）
+examples: []
+  # - "投稿のお手本テキスト1"
+  # - "投稿のお手本テキスト2"

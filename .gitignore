@@ -1,0 +1,24 @@
+# Environment
+.env
+*.pyc
+__pycache__/
+
+# Data (keep structure, ignore contents)
+data/drafts.csv
+data/scripts/*.txt
+data/scripts/*.md
+data/token_info.json
+data/pending_containers.json
+data/threads_insights_cache.json
+data/performance_analysis.json
+
+# User style override
+config/style_user.yaml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

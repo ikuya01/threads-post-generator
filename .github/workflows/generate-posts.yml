@@ -1,0 +1,44 @@
+name: Generate Threads Posts
+
+on:
+  workflow_dispatch:
+    inputs:
+      script_content:
+        description: 'YouTube台本テキスト（直接入力）'
+        required: false
+        type: string
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Save script input
+        if: inputs.script_content != ''
+        run: |
+          mkdir -p data/scripts
+          echo "${{ inputs.script_content }}" > data/scripts/workflow_input.txt
+
+      - name: Run pipeline
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GAS_WEBAPP_URL: ${{ secrets.GAS_WEBAPP_URL }}
+          THREADS_APP_ID: ${{ secrets.THREADS_APP_ID }}
+          THREADS_APP_SECRET: ${{ secrets.THREADS_APP_SECRET }}
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
+          CTA_URL: ${{ secrets.CTA_URL }}
+          CTA_SERVICE_NAME: ${{ secrets.CTA_SERVICE_NAME }}
+          CTA_SERVICE_DESC: ${{ secrets.CTA_SERVICE_DESC }}
+        run: python main.py

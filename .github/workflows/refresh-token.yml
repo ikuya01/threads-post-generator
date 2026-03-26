@@ -1,0 +1,47 @@
+name: Refresh Threads Token
+
+on:
+  schedule:
+    # 毎週月曜 9:00 UTC (18:00 JST)
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Refresh token
+        env:
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          THREADS_APP_SECRET: ${{ secrets.THREADS_APP_SECRET }}
+        run: |
+          python -c "
+          from auth.threads_auth import refresh_token, print_token_status
+          print('=== トークンリフレッシュ ===')
+          print_token_status()
+          result = refresh_token()
+          if result['success']:
+              print(f'リフレッシュ成功! 有効期間: {result[\"expires_in_days\"]}日')
+              print(f'新しいトークン: {result[\"new_token\"][:20]}...')
+              print('')
+              print('⚠️  GitHub Secrets の THREADS_ACCESS_TOKEN を新しいトークンに更新してください')
+          else:
+              print(f'リフレッシュ失敗: {result[\"error\"]}')
+          "
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::warning::Threads トークンのリフレッシュに失敗しました。手動で更新してください。"
