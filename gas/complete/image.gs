@@ -148,31 +148,74 @@ function generateAllImages() {
  * 投稿テキストから画像生成用プロンプトを構築
  */
 function buildImagePrompt_(postText, theme) {
-  let prompt = 'Create a visually appealing, modern social media image for the following Threads post. ';
-  prompt += 'The image should be eye-catching, clean, and professional. ';
-  prompt += 'Do NOT include any text in the image. ';
-  prompt += 'Use a warm, inviting color palette. ';
-  prompt += 'Style: minimalist illustration or photography. ';
-  prompt += 'Aspect ratio: square (1:1). ';
+  let prompt = `以下のThreads投稿の内容をもとに、解説イラスト画像を1枚作成してください。
+
+# 画像スタイル
+## 目的
+・初心者向けに優しく説明する資料
+
+## スタイル指定
+- 日本のビジネス書・解説本でよく使われる「ゆるいイラスト」スタイル
+- 線：黒の細いペン線、手描き感のあるやや不均一な線（デジタルだが手描き風）
+- 塗り：水彩風の淡い色（クリーム、薄い青、薄いオレンジ、薄い緑）、ベタ塗りではなくムラのある塗り
+- 人物：2〜3頭身のデフォルメキャラ、丸い顔、シンプルな表情（点の目、線の口）
+- アイコン・オブジェクト：シンプルな線画＋淡い色、影なし、フラット
+
+## 色彩
+- important：背景：白（#FFFFFF）
+- メインカラー：黒（線）、薄いオレンジ/黄色（強調・見出し背景）
+- アクセント：薄い青、薄い緑、薄いピンク
+- 強調：赤（×マーク、重要ポイント）、緑（✓マーク、OK）
+
+## レイアウト
+- グリッド状に情報を配置（1〜4列）
+- 各セルに「イラスト＋短いテキスト」のセット
+- 見出しは黄色/オレンジの帯やマーカー風の背景
+- 矢印は手描き風、曲線的
+
+## 人物表現
+- 頭身：2〜3頭身
+- 髪：シンプルな塊で表現
+- 服：青、グレーなど落ち着いた色のシンプルな服
+- 表情：○と線だけで表現（困った顔、笑顔、考え中など）
+- ポーズ：説明的なジェスチャー（指さし、腕組み、PC操作など）
+
+## テキスト
+- フォント：丸ゴシック風、手書き風
+- サイズ：大きめ、読みやすさ重視
+- 配置：イラストの横または下に短いキャプション
+- 強調：黄色マーカー風のハイライト、太字
+
+## 避けるべき要素
+- リアルな人物描写
+- グラデーション
+- ドロップシャドウ
+- 複雑な背景
+- 3D表現
+
+## アスペクト比
+- 正方形（1:1）
+
+`;
 
   if (theme) {
-    prompt += '\nTheme/Topic: ' + theme + '. ';
+    prompt += '## テーマ\n' + theme + '\n\n';
   }
 
-  prompt += '\nPost content for context (do not render this text in the image): ' + postText.substring(0, 300);
+  prompt += '## 投稿内容（この内容をもとにイラストを作成）\n' + postText.substring(0, 500);
 
   return prompt;
 }
 
 /**
- * Nanobanana2（gemini-2.0-flash-exp-image-generation）で画像生成
+ * Nanobanana2（gemini-3.1-flash-image-preview）で画像生成
  * @returns {string|null} base64エンコードされた画像データ
  */
 function callNanobanana2_(prompt) {
   const apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
   if (!apiKey) throw new Error('Gemini APIキーが設定されていません');
 
-  const model = 'gemini-2.0-flash-exp-image-generation';
+  const model = 'gemini-3.1-flash-image-preview';
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + apiKey;
 
   const payload = {
