@@ -11,6 +11,8 @@ function onOpen() {
     .addSeparator()
     .addItem('📡 選択行をThreadsに投稿', 'postSelectedRow')
     .addItem('📊 全投稿のインサイトを取得', 'fetchAllInsights')
+    .addItem('🎨 選択行の画像を生成', 'generateImageForPost')
+    .addItem('🎨 全投稿の画像を一括生成', 'generateAllImages')
     .addSeparator()
     .addItem('📈 ダッシュボードを更新', 'updateDashboard')
     .addSeparator()

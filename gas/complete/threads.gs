@@ -23,8 +23,21 @@ function postSelectedRow() {
     return;
   }
 
-  const text = mgmtSheet.getRange(row, 3).getValue(); // C列: 投稿テキスト
-  const status = mgmtSheet.getRange(row, 4).getValue(); // D列: ステータス
+  const headers = mgmtSheet.getRange(1, 1, 1, mgmtSheet.getLastColumn()).getValues()[0];
+  const textCol = headers.indexOf('投稿テキスト');
+  const statusCol = headers.indexOf('ステータス');
+  const imgUrlCol = headers.indexOf('画像URL');
+
+  // ヘッダーが見つからない場合は従来の固定列にフォールバック
+  const text = textCol !== -1
+    ? mgmtSheet.getRange(row, textCol + 1).getValue()
+    : mgmtSheet.getRange(row, 3).getValue(); // C列: 投稿テキスト（旧来の固定列）
+  const status = statusCol !== -1
+    ? mgmtSheet.getRange(row, statusCol + 1).getValue()
+    : mgmtSheet.getRange(row, 4).getValue(); // D列: ステータス（旧来の固定列）
+  const imageUrl = imgUrlCol !== -1
+    ? mgmtSheet.getRange(row, imgUrlCol + 1).getValue()
+    : '';
 
   if (!text) {
     SpreadsheetApp.getUi().alert('投稿テキストがありません');
@@ -38,16 +51,19 @@ function postSelectedRow() {
 
   // 確認ダイアログ
   const ui = SpreadsheetApp.getUi();
+  const imageNote = imageUrl ? '\n\n🎨 画像付き投稿として送信します。' : '';
   const result = ui.alert(
     '投稿確認',
-    '以下の内容をThreadsに投稿しますか？\n\n' + text.toString().substring(0, 200) + '...',
+    '以下の内容をThreadsに投稿しますか？\n\n' + text.toString().substring(0, 200) + '...' + imageNote,
     ui.ButtonSet.YES_NO
   );
 
   if (result !== ui.Button.YES) return;
 
   try {
-    const postResult = postToThreads_(text.toString());
+    const postResult = imageUrl
+      ? postToThreadsWithImage_(text.toString(), imageUrl.toString())
+      : postToThreads_(text.toString());
 
     // シート更新
     mgmtSheet.getRange(row, 2).setValue(postResult.postId);  // Threads投稿ID
@@ -204,6 +220,64 @@ function fetchAllInsights() {
   if (updated > 0) {
     Logger.log(updated + '件のインサイトを更新しました');
   }
+}
+
+/**
+ * 画像付きThreads投稿（2ステップ）
+ * @param {string} text - 投稿テキスト
+ * @param {string} imageUrl - 公開画像URL
+ * @returns {Object} {postId: string}
+ */
+function postToThreadsWithImage_(text, imageUrl) {
+  const props = PropertiesService.getScriptProperties();
+  const token = props.getProperty('THREADS_ACCESS_TOKEN');
+  const userId = props.getProperty('THREADS_USER_ID');
+
+  if (!token || !userId) {
+    throw new Error('Threads APIの認証情報が設定されていません');
+  }
+
+  // Step 1: 画像コンテナ作成
+  const createUrl = THREADS_API_BASE + '/' + userId + '/threads';
+  const createResponse = UrlFetchApp.fetch(createUrl, {
+    method: 'post',
+    payload: {
+      media_type: 'IMAGE',
+      image_url: imageUrl,
+      text: text,
+      access_token: token,
+    },
+    muteHttpExceptions: true,
+  });
+
+  if (createResponse.getResponseCode() !== 200) {
+    const err = JSON.parse(createResponse.getContentText());
+    throw new Error('画像コンテナ作成失敗: ' + (err.error?.message || createResponse.getResponseCode()));
+  }
+
+  const containerId = JSON.parse(createResponse.getContentText()).id;
+
+  // 画像の場合は少し長めに待機
+  Utilities.sleep(10000);
+
+  // Step 2: 公開
+  const publishUrl = THREADS_API_BASE + '/' + userId + '/threads_publish';
+  const publishResponse = UrlFetchApp.fetch(publishUrl, {
+    method: 'post',
+    payload: {
+      creation_id: containerId,
+      access_token: token,
+    },
+    muteHttpExceptions: true,
+  });
+
+  if (publishResponse.getResponseCode() !== 200) {
+    const err = JSON.parse(publishResponse.getContentText());
+    throw new Error('公開失敗: ' + (err.error?.message || publishResponse.getResponseCode()));
+  }
+
+  const postId = JSON.parse(publishResponse.getContentText()).id;
+  return { postId: postId };
 }
 
 /**
